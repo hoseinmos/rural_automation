@@ -1,0 +1,160 @@
+{
+    "name": "rural-automation/system",
+    "description": "سیستم اتوماسیون اداری دهیاری - Rural Office Automation System",
+    "type": "project",
+    "keywords": [
+        "php",
+        "automation",
+        "office",
+        "rural",
+        "messaging",
+        "persian",
+        "rtl"
+    ],
+    "homepage": "https://github.com/rural-automation/system",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rural Automation Team",
+            "email": "dev@rural-automation.ir",
+            "homepage": "https://rural-automation.ir",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "email": "support@rural-automation.ir",
+        "issues": "https://github.com/rural-automation/system/issues",
+        "source": "https://github.com/rural-automation/system"
+    },
+    "require": {
+        "php": ">=7.4.0",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-gd": "*",
+        "ext-fileinfo": "*",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-session": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "squizlabs/php_codesniffer": "^3.5",
+        "phpstan/phpstan": "^1.0"
+    },
+    "suggest": {
+        "ext-zip": "برای ایجاد فایل‌های فشرده پشتیبان",
+        "ext-curl": "برای ارسال درخواست‌های HTTP خارجی",
+        "ext-openssl": "برای امنیت بیشتر",
+        "ext-intl": "برای پشتیبانی بهتر از چندزبانگی"
+    },
+    "autoload": {
+        "psr-4": {
+            "RuralAutomation\\": "src/"
+        },
+        "files": [
+            "includes/auth.php",
+            "includes/security.php",
+            "includes/jalali.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "RuralAutomation\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "cs-check": "phpcs --standard=PSR12 src/ includes/",
+        "cs-fix": "phpcbf --standard=PSR12 src/ includes/",
+        "analyze": "phpstan analyse src/ includes/ --level=5",
+        "install-system": [
+            "@php install.php --auto"
+        ],
+        "backup": [
+            "@php scripts/backup.php"
+        ],
+        "clear-cache": [
+            "@php scripts/clear_cache.php"
+        ],
+        "optimize": [
+            "composer dump-autoload --optimize",
+            "@clear-cache"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "اجرای تست‌های واحد",
+        "test-coverage": "اجرای تست‌ها با گزارش پوشش",
+        "cs-check": "بررسی استانداردهای کدنویسی",
+        "cs-fix": "تصحیح خودکار استانداردهای کدنویسی",
+        "analyze": "تحلیل استاتیک کد",
+        "install-system": "نصب خودکار سیستم",
+        "backup": "تهیه پشتیبان از سیستم",
+        "clear-cache": "پاک کردن cache",
+        "optimize": "بهینه‌سازی سیستم"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "extra": {
+        "system-info": {
+            "name": "سیستم اتوماسیون اداری دهیاری",
+            "version": "1.0.0",
+            "php-min": "7.4",
+            "mysql-min": "5.7",
+            "features": [
+                "نامه‌نگاری پیشرفته",
+                "مدیریت کاربران",
+                "گزارش‌گیری",
+                "امنیت بالا",
+                "تاریخ شمسی",
+                "طراحی ریسپانسیو"
+            ]
+        },
+        "installation": {
+            "requirements": {
+                "php": ">=7.4",
+                "mysql": ">=5.7",
+                "extensions": [
+                    "pdo",
+                    "pdo_mysql", 
+                    "gd",
+                    "fileinfo",
+                    "json",
+                    "mbstring",
+                    "session"
+                ]
+            },
+            "recommended": {
+                "memory_limit": "128M",
+                "upload_max_filesize": "20M",
+                "post_max_size": "25M",
+                "max_execution_time": "300"
+            }
+        }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/rural-automation/system"
+        }
+    ],
+    "archive": {
+        "exclude": [
+            "tests/",
+            "docs/",
+            ".github/",
+            ".gitignore",
+            ".phpunit.result.cache",
+            "phpunit.xml",
+            "phpcs.xml",
+            "phpstan.neon"
+        ]
+    }
+}

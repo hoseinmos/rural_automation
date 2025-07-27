@@ -1,0 +1,41 @@
+[2025-07-16 05:24:06] [INFO] User admin logged in successfully
+[2025-07-16 05:24:44] [INFO] User admin logged in successfully
+[2025-07-16 05:25:39] [WARNING] Login failed for admin: نام کاربری یا رمز عبور اشتباه است
+[2025-07-16 05:25:53] [INFO] User admin logged in successfully
+[2025-07-16 05:27:57] [WARNING] Login failed for admin1: نام کاربری یا رمز عبور اشتباه است
+[2025-07-16 05:29:15] [INFO] User admin logged in successfully
+[2025-07-16 05:32:06] [INFO] User salimi logged in successfully
+[2025-07-16 05:32:43] [INFO] Message sent: ID 1 from user 3 to user 1
+[2025-07-16 05:34:12] [INFO] Message sent: ID 2 from user 1 to user 3
+[2025-07-16 05:37:06] [INFO] File uploaded: 1752631626_6877094a5b2f5_photo_2025-05-21_23-20-07.jpg
+[2025-07-16 05:37:06] [INFO] Message sent: ID 3 from user 1 to user 3
+[2025-07-16 05:53:08] [INFO] User admin logged in successfully
+[2025-07-16 05:53:57] [INFO] Message sent: ID 4 from user 1 to user 3
+[2025-07-16 05:58:43] [INFO] User admin logged in successfully
+[2025-07-16 06:04:52] [WARNING] Login failed for salimi: خطا در اجرای کوئری: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rural_automation.remember_tokens' doesn't exist
+[2025-07-16 06:09:21] [INFO] User salimi logged in successfully
+[2025-07-16 06:13:00] [INFO] User salimi logged in successfully
+[2025-07-16 06:19:47] [INFO] User salimi logged in successfully
+[2025-07-16 06:26:19] [INFO] User salimi logged in successfully
+[2025-07-16 06:27:13] [INFO] File uploaded: 1752634633_687715094b03c_photo_2025-07-09_16-24-11.jpg
+[2025-07-16 06:27:13] [INFO] Message sent: ID 5 from user 3 to user 1
+[2025-07-16 06:52:17] [INFO] User salimi logged in successfully
+[2025-07-16 06:54:11] [INFO] File uploaded: 1752636251_68771b5b0dabc_Screenshot 2025-07-12 222506.png
+[2025-07-16 06:55:02] [INFO] User admin logged in successfully
+[2025-07-16 06:56:43] [INFO] User H.mostafaei logged in successfully
+[2025-07-16 06:57:19] [INFO] Message sent: ID 6 from user 4 to user 1
+[2025-07-16 06:58:53] [INFO] Message sent: ID 7 from user 1 to user 4
+[2025-07-16 06:59:26] [INFO] Message sent: ID 8 from user 4 to user 1
+[2025-07-16 07:02:25] [INFO] User H.mostafaei logged in successfully
+[2025-07-16 07:09:03] [INFO] Message sent: ID 9 from user 1 to user 3
+[2025-07-16 22:30:33] [INFO] User salimi logged in successfully
+[2025-07-16 22:37:51] [INFO] User salimi logged out
+[2025-07-16 22:38:01] [INFO] User admin logged in successfully
+[2025-07-16 23:00:05] [INFO] User admin logged out
+[2025-07-16 23:01:59] [INFO] User salimi logged in successfully
+[2025-07-16 23:05:38] [INFO] User salimi logged out
+[2025-07-16 23:22:21] [INFO] User salimi logged in successfully
+[2025-07-16 23:23:52] [INFO] User salimi logged out
+[2025-07-16 23:24:00] [WARNING] Login failed for admin: نام کاربری یا رمز عبور اشتباه است
+[2025-07-16 23:24:03] [INFO] User admin logged in successfully
+[2025-07-16 23:24:51] [INFO] Message sent: ID 10 from user 1 to user 4

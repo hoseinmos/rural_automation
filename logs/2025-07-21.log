@@ -1,0 +1,47 @@
+[2025-07-21 07:37:23] [INFO] User admin logged in successfully
+[2025-07-21 08:11:55] [WARNING] Remember tokens table not found, feature disabled
+[2025-07-21 08:11:55] [WARNING] Error checking blocked status: خطا در اتصال به پایگاه داده: SQLSTATE[HY000] [1049] Unknown database 'rural_automation'
+[2025-07-21 08:11:55] [WARNING] Login failed for admin: خطا در اتصال به پایگاه داده: SQLSTATE[HY000] [1049] Unknown database 'rural_automation'
+[2025-07-21 08:14:31] [WARNING] Remember tokens table not found, feature disabled
+[2025-07-21 08:14:31] [INFO] User admin logged in successfully
+[2025-07-21 08:23:24] [INFO] User admin logged in successfully
+[2025-07-21 08:23:50] [INFO] File uploaded: 1753073630_687dc7de91443_photo19557649898.jpg
+[2025-07-21 08:28:31] [INFO] User admin logged in successfully
+[2025-07-21 08:33:23] [INFO] User admin logged in successfully
+[2025-07-21 08:37:13] [INFO] User admin logged in successfully
+[2025-07-21 09:54:20] [INFO] User admin logged in successfully
+[2025-07-21 09:54:48] [INFO] User admin logged in successfully
+[2025-07-21 09:56:40] [INFO] Message sent: ID 14 from user 1 to user 4
+[2025-07-21 09:57:25] [WARNING] Login failed for salimi: نام کاربری یا رمز عبور اشتباه است
+[2025-07-21 09:57:29] [INFO] User salimi logged in successfully
+[2025-07-21 09:58:17] [INFO] User salimi logged out
+[2025-07-21 09:58:31] [WARNING] Login failed for salimi: نام کاربری یا رمز عبور اشتباه است
+[2025-07-21 09:58:36] [INFO] User salimi logged in successfully
+[2025-07-21 09:59:00] [INFO] Message sent: ID 15 from user 1 to user 3
+[2025-07-21 13:57:59] [INFO] User salimi logged in successfully
+[2025-07-21 14:01:13] [INFO] User admin logged in successfully
+[2025-07-21 14:03:38] [INFO] File uploaded: 1753094018_687e1782e0aac_default_bg.jpg
+[2025-07-21 14:09:48] [INFO] File uploaded: 1753094388_687e18f4ce053_1753094018_687e1782e0aac_default_bg.jpg
+[2025-07-21 14:11:53] [INFO] User admin logged in successfully
+[2025-07-21 14:13:15] [INFO] File uploaded: 1753094595_687e19c3a5d9e_images.png
+[2025-07-21 21:19:15] [INFO] User admin logged in successfully
+[2025-07-21 21:20:24] [INFO] User admin logged out
+[2025-07-21 21:20:34] [INFO] User salimi logged in successfully
+[2025-07-21 21:21:21] [INFO] Message sent: ID 16 from user 3 to user 1
+[2025-07-21 22:11:51] [INFO] User salimi logged in successfully
+[2025-07-21 22:11:54] [INFO] User salimi logged out
+[2025-07-21 22:11:56] [INFO] User admin logged in successfully
+[2025-07-21 22:12:11] [INFO] File uploaded: 1753123331_687e8a034bee3_default_bg.jpg
+[2025-07-21 22:13:01] [INFO] File uploaded: 1753123381_687e8a3508213_default.jpg
+[2025-07-21 22:15:29] [INFO] User admin logged in successfully
+[2025-07-21 22:15:51] [INFO] File uploaded: 1753123551_687e8adfa59a4_default.jpg
+[2025-07-21 22:16:39] [INFO] Message sent: ID 17 from user 3 to user 1
+[2025-07-21 22:22:10] [INFO] File uploaded: 1753123930_687e8c5a9242e_222552_787.png
+[2025-07-21 22:23:04] [INFO] User admin logged in successfully
+[2025-07-21 22:26:51] [INFO] User admin logged in successfully
+[2025-07-21 22:28:00] [INFO] User admin logged out
+[2025-07-21 22:28:03] [INFO] User salimi logged in successfully
+[2025-07-21 22:28:32] [INFO] Message sent: ID 17 from user 3 to user 1
+[2025-07-21 22:29:00] [INFO] File uploaded: 1753124340_687e8df486700_222552_787.png
+[2025-07-21 23:08:52] [INFO] User admin logged in successfully
+[2025-07-21 23:10:39] [INFO] User admin logged in successfully

@@ -1,0 +1,218 @@
+# Rural Automation System - Apache Configuration
+# سیستم اتوماسیون دهیاری - تنظیمات Apache
+
+# فعال‌سازی RewriteEngine
+RewriteEngine On
+
+# محافظت از فایل‌های حساس
+<FilesMatch "\.(inc|conf|config|ini|log|sql|bak|backup)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# محافظت از فایل‌های PHP حساس
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "database.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+<Files "install.php">
+    # فقط در صورت نیاز به نصب، این خط را کامنت کنید
+    Order allow,deny
+    Deny from all
+</Files>
+
+# جلوگیری از دسترسی به پوشه‌های سیستمی
+<DirectoryMatch "(config|includes|logs|cache|backup)">
+    Order allow,deny
+    Deny from all
+</DirectoryMatch>
+
+# جلوگیری از فهرست‌سازی پوشه‌ها
+Options -Indexes
+
+# محافظت از فایل .htaccess
+<Files ".htaccess">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# محافظت از فایل‌های مخفی
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# تنظیم encoding UTF-8
+AddDefaultCharset UTF-8
+
+# فعال‌سازی Gzip compression برای بهتر شدن سرعت
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# تنظیم Cache Headers
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/ico "access plus 1 month"
+    ExpiresByType image/icon "access plus 1 month"
+    ExpiresByType text/x-icon "access plus 1 month"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+</IfModule>
+
+# اجبار استفاده از HTTPS (در صورت داشتن SSL)
+# خط‌های زیر را فقط در صورت داشتن گواهی SSL فعال کنید
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# محافظت از hotlinking تصاویر
+RewriteCond %{HTTP_REFERER} !^$
+RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?yourdomain.com [NC]
+RewriteRule \.(jpg|jpeg|png|gif|pdf)$ - [NC,F,L]
+
+# محدود کردن حجم آپلود (تنظیم اضافی)
+php_value upload_max_filesize 10M
+php_value post_max_size 12M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# تنظیم memory limit
+php_value memory_limit 128M
+
+# جلوگیری از نمایش خطاهای PHP در production
+php_flag display_errors Off
+php_flag log_errors On
+
+# تنظیم session
+php_value session.cookie_httponly 1
+php_value session.cookie_secure 0
+php_value session.use_only_cookies 1
+
+# محافظت از برخی حملات امنیتی
+<IfModule mod_headers.c>
+    # X-Frame-Options
+    Header always set X-Frame-Options DENY
+    
+    # X-Content-Type-Options
+    Header always set X-Content-Type-Options nosniff
+    
+    # X-XSS-Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (سطح پایه)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://code.jquery.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://fonts.googleapis.com; img-src 'self' data:; media-src 'self'"
+</IfModule>
+
+# محدود کردن تعداد درخواست‌ها (اگر mod_evasive نصب باشد)
+<IfModule mod_evasive.c>
+    DOSHashTableSize    512
+    DOSPageCount        3
+    DOSPageInterval     1
+    DOSSiteCount        50
+    DOSSiteInterval     1
+    DOSBlockingPeriod   600
+</IfModule>
+
+# جلوگیری از اجرای اسکریپت‌های PHP در پوشه uploads
+<Directory uploads>
+    <FilesMatch "\.php$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</Directory>
+
+# تنظیم MIME types
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType image/svg+xml .svg
+    AddType application/vnd.ms-fontobject .eot
+    AddType application/x-font-ttf .ttf
+    AddType application/x-font-woff .woff
+    AddType application/x-font-woff2 .woff2
+</IfModule>
+
+# URL Rewriting برای صفحات زیبا (اختیاری)
+# RewriteRule ^inbox$ index.php?page=inbox [L,QSA]
+# RewriteRule ^compose$ index.php?page=compose [L,QSA]
+# RewriteRule ^sent$ index.php?page=sent [L,QSA]
+# RewriteRule ^reports$ index.php?page=reports [L,QSA]
+# RewriteRule ^profile$ index.php?page=profile [L,QSA]
+
+# محافظت از تزریق SQL و XSS
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*object.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*embed.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (SELECT|UNION|INSERT|DROP|DELETE|UPDATE|CREATE|ALTER|EXEC).* [NC,OR]
+    RewriteCond %{QUERY_STRING} \.\./ [OR]
+    RewriteCond %{QUERY_STRING} \.(bash|git|hg|log|svn|swp|cvs) [NC,OR]
+    RewriteCond %{QUERY_STRING} etc/passwd [NC,OR]
+    RewriteCond %{QUERY_STRING} boot\.ini [NC,OR]
+    RewriteCond %{QUERY_STRING} ftp\: [NC,OR]
+    RewriteCond %{QUERY_STRING} https?\: [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC]
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# تنظیمات خطا برای production
+ErrorDocument 403 /error_pages/403.html
+ErrorDocument 404 /error_pages/404.html
+ErrorDocument 500 /error_pages/500.html
+
+# محافظت از User Agent های مخرب
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+    RewriteCond %{HTTP_USER_AGENT} (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC]
+    RewriteRule .* - [F,L]
+</IfModule>
+
+# محافظت از درخواست‌های مشکوک
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+    RewriteRule ^(.*)$ - [F,L]
+</IfModule>
+
+# تنظیمات امنیتی اضافی
+<IfModule mod_security.c>
+    SecRuleEngine On
+    SecRequestBodyAccess On
+    SecResponseBodyAccess Off
+    SecRequestBodyLimit 13107200
+    SecRequestBodyNoFilesLimit 131072
+    SecRequestBodyInMemoryLimit 131072
+    SecRequestBodyLimitAction Reject
+    SecPcreMatchLimit 1000
+    SecPcreMatchLimitRecursion 1000
+</IfModule>
+
+# End of .htaccess

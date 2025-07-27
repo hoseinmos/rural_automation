@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خطای سرور - سیستم اتوماسیون دهیاری</title>
+    
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- فونت وزیر -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Vazir', sans-serif;
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-container {
+            text-align: center;
+            color: white;
+            max-width: 600px;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .error-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .btn-home {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin: 0 0.5rem;
+            display: inline-block;
+        }
+        
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .icon-500 {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        
+        .error-details {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            backdrop-filter: blur(10px);
+            text-align: right;
+        }
+        
+        .refresh-btn {
+            background: rgba(40, 167, 69, 0.3);
+            border: 2px solid rgba(40, 167, 69, 0.5);
+        }
+        
+        .refresh-btn:hover {
+            background: rgba(40, 167, 69, 0.5);
+            border-color: rgba(40, 167, 69, 0.7);
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin: 1rem auto;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="icon-500">
+            <i class="fas fa-server"></i>
+        </div>
+        
+        <div class="error-code">500</div>
+        
+        <h1 class="error-title">خطای داخلی سرور</h1>
+        
+        <p class="error-description">
+            متأسفیم، در سرور خطایی رخ داده است. تیم فنی ما در حال بررسی و رفع این مشکل هستند.
+        </p>
+        
+        <div class="error-details">
+            <h6><i class="fas fa-info-circle me-2"></i>اطلاعات خطا</h6>
+            <ul class="list-unstyled mb-0">
+                <li><strong>زمان:</strong> <span id="error-time"></span></li>
+                <li><strong>کد خطا:</strong> HTTP 500 Internal Server Error</li>
+                <li><strong>درخواست:</strong> <span id="request-url"></span></li>
+                <li><strong>مرورگر:</strong> <span id="user-agent"></span></li>
+            </ul>
+        </div>
+        
+        <div id="loading" class="loading-spinner">
+            <div class="spinner-border text-light" role="status">
+                <span class="visually-hidden">در حال بارگذاری...</span>
+            </div>
+            <p class="mt-2">در حال تلاش مجدد...</p>
+        </div>
+        
+        <div class="mt-4" id="action-buttons">
+            <button onclick="retryPage()" class="btn-home refresh-btn">
+                <i class="fas fa-redo me-2"></i>
+                تلاش مجدد
+            </button>
+            <a href="/" class="btn-home">
+                <i class="fas fa-home me-2"></i>
+                صفحه اصلی
+            </a>
+        </div>
+        
+        <div class="mt-4">
+            <p class="small">
+                <strong>پیشنهادات:</strong>
+            </p>
+            <ul class="list-unstyled small">
+                <li>• صفحه را مجدداً بارگذاری کنید</li>
+                <li>• کش مرورگر خود را پاک کنید</li>
+                <li>• چند دقیقه دیگر تلاش کنید</li>
+                <li>• در صورت تکرار، با پشتیبانی تماس بگیرید</li>
+            </ul>
+        </div>
+        
+        <div class="mt-3">
+            <p class="small opacity-75">
+                شناسه خطا: <span id="error-id"></span>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // پر کردن اطلاعات خطا
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            document.getElementById('error-time').textContent = now.toLocaleString('fa-IR');
+            document.getElementById('request-url').textContent = window.location.pathname;
+            document.getElementById('user-agent').textContent = navigator.userAgent.substring(0, 50) + '...';
+            document.getElementById('error-id').textContent = 'ERR-' + Date.now().toString(36).toUpperCase();
+        });
+        
+        // تابع تلاش مجدد
+        function retryPage() {
+            const loading = document.getElementById('loading');
+            const buttons = document.getElementById('action-buttons');
+            
+            loading.style.display = 'block';
+            buttons.style.display = 'none';
+            
+            // تلاش مجدد بعد از 3 ثانیه
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }
+        
+        // ارسال گزارش خطا به سرور (در صورت امکان)
+        fetch('/ajax/report_error.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                error_type: '500_internal_server_error',
+                url: window.location.href,
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString(),
+                referrer: document.referrer
+            })
+        }).catch(() => {
+            // خطا در ارسال گزارش
+        });
+        
+        // کلیدهای میانبر
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' || (e.ctrlKey && e.key === 'r')) {
+                e.preventDefault();
+                retryPage();
+            } else if (e.key === 'Escape') {
+                window.location.href = '/';
+            }
+        });
+        
+        // تلاش خودکار بعد از 30 ثانیه
+        setTimeout(() => {
+            if (confirm('آیا می‌خواهید صفحه به صورت خودکار بارگذاری شود؟')) {
+                retryPage();
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

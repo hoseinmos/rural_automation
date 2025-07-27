@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دسترسی ممنوع - سیستم اتوماسیون دهیاری</title>
+    
+    <!-- Bootstrap 5 RTL -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- فونت وزیر -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazir:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Vazir', sans-serif;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-container {
+            text-align: center;
+            color: white;
+            max-width: 600px;
+            padding: 2rem;
+        }
+        
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .error-description {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .btn-home {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin: 0 0.5rem;
+            display: inline-block;
+        }
+        
+        .btn-home:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .icon-403 {
+            font-size: 6rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+        
+        .security-warning {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .warning-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="icon-403">
+            <i class="fas fa-shield-alt"></i>
+        </div>
+        
+        <div class="error-code">403</div>
+        
+        <h1 class="error-title">دسترسی ممنوع</h1>
+        
+        <p class="error-description">
+            شما مجوز دسترسی به این صفحه یا منابع را ندارید. این ممکن است به دلیل عدم ورود به سیستم یا نداشتن سطح دسترسی مناسب باشد.
+        </p>
+        
+        <div class="security-warning">
+            <div class="warning-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h5>نکته امنیتی</h5>
+            <p class="mb-0">
+                تلاش‌های مکرر برای دسترسی غیرمجاز ثبت و نظارت می‌شود. لطفاً تنها به بخش‌هایی که مجوز دسترسی دارید مراجعه کنید.
+            </p>
+        </div>
+        
+        <div class="mt-4">
+            <a href="/" class="btn-home">
+                <i class="fas fa-home me-2"></i>
+                صفحه اصلی
+            </a>
+            <a href="/index.php" class="btn-home">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                ورود به سیستم
+            </a>
+        </div>
+        
+        <div class="mt-4">
+            <p class="small">
+                در صورت اعتقاد به اینکه این پیام به اشتباه نمایش داده شده، با مدیر سیستم تماس بگیرید.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // ثبت تلاش دسترسی غیرمجاز
+        fetch('/ajax/log_security_event.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                event: '403_access_denied',
+                url: window.location.href,
+                user_agent: navigator.userAgent,
+                timestamp: new Date().toISOString()
+            })
+        }).catch(() => {
+            // خطا در ارسال لاگ
+        });
+        
+        // کلیدهای میانبر
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.location.href = '/';
+            } else if (e.key === 'Enter') {
+                window.location.href = '/index.php';
+            }
+        });
+    </script>
+</body>
+</html>
