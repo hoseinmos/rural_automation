@@ -120,3 +120,4 @@ class PersianShaper {
         return html_entity_decode('&#x' . $hex . ';', ENT_QUOTES, 'UTF-8');
     }
 }
+?>
