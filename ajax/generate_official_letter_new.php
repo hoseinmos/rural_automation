@@ -10,7 +10,9 @@ require_once '../includes/auth.php';
 require_once '../includes/jalali.php';
 require_once '../includes/utils.php';
 
+// اطمینان از UTF-8
 header('Content-Type: application/json; charset=utf-8');
+mb_internal_encoding('UTF-8');
 
 try {
     Auth::requireLogin();
@@ -45,10 +47,13 @@ try {
     // دریافت قالب فعال
     $template = $db->fetchRow("SELECT * FROM letter_templates WHERE is_active = 1 LIMIT 1");
     
+    // اگر قالبی وجود ندارد، از قالب پیش‌فرض استفاده کن
     if (!$template || !$template['background_image']) {
-        // اگر قالبی وجود ندارد، از روش قدیمی استفاده کن
-        include 'generate_official_letter.php';
-        exit;
+        $template = [
+            'id' => 0,
+            'background_image' => 'default_bg.jpg',
+            'page_size' => 'A4'
+        ];
     }
     
     // دریافت موقعیت فیلدها
@@ -56,6 +61,11 @@ try {
         "SELECT * FROM template_fields WHERE template_id = ?",
         [$template['id']]
     );
+    
+    // اگر فیلد تعریف نشده، از مقادیر پیش‌فرض استفاده کن
+    if (empty($fields)) {
+        $fields = getDefaultFields();
+    }
     
     // تولید تصویر نامه
     $letterImage = generateLetterImage($message, $template, $fields);
@@ -71,6 +81,7 @@ try {
     }
 
 } catch (Exception $e) {
+    error_log("Error in generate_official_letter: " . $e->getMessage());
     echo json_encode([
         'success' => false, 
         'message' => $e->getMessage()
@@ -78,33 +89,55 @@ try {
 }
 
 /**
+ * دریافت فیلدهای پیش‌فرض
+ */
+function getDefaultFields() {
+    return [
+        ['field_name' => 'message_number', 'x_position' => 450, 'y_position' => 120, 'font_size' => 18, 'width' => 150, 'height' => 30],
+        ['field_name' => 'date', 'x_position' => 450, 'y_position' => 150, 'font_size' => 18, 'width' => 150, 'height' => 30],
+        ['field_name' => 'subject', 'x_position' => 300, 'y_position' => 250, 'font_size' => 20, 'width' => 400, 'height' => 30],
+        ['field_name' => 'receiver_name', 'x_position' => 450, 'y_position' => 200, 'font_size' => 18, 'width' => 200, 'height' => 30],
+        ['field_name' => 'sender_name', 'x_position' => 150, 'y_position' => 680, 'font_size' => 18, 'width' => 200, 'height' => 30],
+        ['field_name' => 'content', 'x_position' => 100, 'y_position' => 300, 'font_size' => 16, 'width' => 400, 'height' => 300],
+        ['field_name' => 'signature', 'x_position' => 150, 'y_position' => 620, 'font_size' => 0, 'width' => 100, 'height' => 60]
+    ];
+}
+
+/**
  * تولید تصویر نامه با GD
  */
 function generateLetterImage($message, $template, $fields) {
+    // مسیر تصویر پس‌زمینه
     $backgroundPath = UPLOAD_PATH . 'templates/' . $template['background_image'];
     
+    // بررسی وجود تصویر
     if (!file_exists($backgroundPath)) {
-        throw new Exception('تصویر پس‌زمینه یافت نشد');
+        // اگر تصویر پیش‌فرض هم وجود ندارد، یک تصویر سفید بساز
+        return generateWhiteBackgroundLetter($message, $fields);
     }
     
     // بارگذاری تصویر پس‌زمینه
-    $imageInfo = getimagesize($backgroundPath);
+    $imageInfo = @getimagesize($backgroundPath);
+    if (!$imageInfo) {
+        return generateWhiteBackgroundLetter($message, $fields);
+    }
+    
     $mime = $imageInfo['mime'];
     
     switch ($mime) {
         case 'image/jpeg':
         case 'image/jpg':
-            $bgImage = imagecreatefromjpeg($backgroundPath);
+            $bgImage = @imagecreatefromjpeg($backgroundPath);
             break;
         case 'image/png':
-            $bgImage = imagecreatefrompng($backgroundPath);
+            $bgImage = @imagecreatefrompng($backgroundPath);
             break;
         default:
-            throw new Exception('فرمت تصویر پشتیبانی نمی‌شود');
+            return generateWhiteBackgroundLetter($message, $fields);
     }
     
     if (!$bgImage) {
-        throw new Exception('خطا در بارگذاری تصویر پس‌زمینه');
+        return generateWhiteBackgroundLetter($message, $fields);
     }
     
     // اندازه تصویر
@@ -113,21 +146,70 @@ function generateLetterImage($message, $template, $fields) {
     
     // ایجاد تصویر True Color برای کیفیت بهتر
     $image = imagecreatetruecolor($width, $height);
+    
+    // رنگ سفید برای پس‌زمینه
+    $white = imagecolorallocate($image, 255, 255, 255);
+    imagefill($image, 0, 0, $white);
+    
+    // کپی تصویر پس‌زمینه
     imagecopy($image, $bgImage, 0, 0, 0, 0, $width, $height);
     imagedestroy($bgImage);
     
+    // نوشتن متن‌ها
+    writeTextsOnImage($image, $message, $fields);
+    
+    // ذخیره تصویر
+    return saveLetterImage($image, $message['id']);
+}
+
+/**
+ * تولید نامه با پس‌زمینه سفید
+ */
+function generateWhiteBackgroundLetter($message, $fields) {
+    // ابعاد A4 در 72 DPI
+    $width = 595;
+    $height = 842;
+    
+    // ایجاد تصویر
+    $image = imagecreatetruecolor($width, $height);
+    
     // رنگ‌ها
+    $white = imagecolorallocate($image, 255, 255, 255);
+    $black = imagecolorallocate($image, 0, 0, 0);
+    $gray = imagecolorallocate($image, 200, 200, 200);
+    
+    // پر کردن با رنگ سفید
+    imagefill($image, 0, 0, $white);
+    
+    // رسم کادر
+    imagerectangle($image, 20, 20, $width - 20, $height - 20, $gray);
+    
+    // نوشتن متن‌ها
+    writeTextsOnImage($image, $message, $fields);
+    
+    // ذخیره تصویر
+    return saveLetterImage($image, $message['id']);
+}
+
+/**
+ * نوشتن متن‌ها روی تصویر (نسخه اصلاح شده)
+ */
+function writeTextsOnImage($image, $message, $fields) {
+    // رنگ متن
     $black = imagecolorallocate($image, 0, 0, 0);
     
-    // فونت فارسی
-    $fontPath = __DIR__ . '/../assets/fonts/BNazanin.ttf';
-    if (!file_exists($fontPath)) {
-        // اگر فونت B Nazanin موجود نیست، از فونت پیش‌فرض استفاده کن
-        $fontPath = __DIR__ . '/../assets/fonts/Vazir.ttf';
+    // پیدا کردن فونت مناسب
+    $fontPath = findSuitableFont();
+    
+    if (!$fontPath) {
+        throw new Exception('فونت مناسب یافت نشد');
     }
+
+    // شامل کردن کلاس پردازش متن فارسی
+    require_once __DIR__ . '/../includes/persian_shaper.php';
     
     // آماده‌سازی داده‌ها
-    $currentDate = JalaliDate::toJalali(time(), 'Y/m/d');
+    $currentDate = class_exists('JalaliDate') ? JalaliDate::toJalali(time(), 'Y/m/d') : date('Y/m/d');
     
     $fieldData = [
         'message_number' => $message['message_number'] ?: 'بدون شماره',
@@ -135,167 +217,203 @@ function generateLetterImage($message, $template, $fields) {
         'subject' => $message['subject'],
         'receiver_name' => $message['receiver_name'],
         'sender_name' => $message['sender_name'],
-        'content' => $message['content']
+        'content' => strip_tags($message['content']) // حذف HTML tags
     ];
     
     // نوشتن فیلدها روی تصویر
     foreach ($fields as $field) {
-        $text = $fieldData[$field['field_name']] ?? '';
+        $fieldName = $field['field_name'];
+        $text = $fieldData[$fieldName] ?? '';
         
         if (empty($text)) continue;
         
         $x = (int)$field['x_position'];
         $y = (int)$field['y_position'];
-        // افزایش اندازه فونت پیش‌فرض از ۱۲ به ۱۶
         $fontSize = (int)($field['font_size'] ?: 16);
         
-        // تبدیل اندازه فونت به پوینت برای imagettftext
-        $fontSizePt = $fontSize * 0.75;
-        
-        if ($field['field_name'] === 'content') {
-            // متن نامه - نیاز به wrap کردن
-            if ($field['width'] && $field['height']) {
-                writeWrappedText(
-                    $image, 
-                    $fontSizePt, 
-                    $x, 
-                    $y, 
-                    $black, 
-                    $fontPath, 
-                    $text, 
-                    $field['width'],
-                    $field['height']
-                );
-            }
-        } elseif ($field['field_name'] === 'signature' && $message['signature_image']) {
-            // امضای دیجیتال
-            $signaturePath = UPLOAD_PATH . 'signatures/' . $message['signature_image'];
-            if (file_exists($signaturePath)) {
-                $signature = imagecreatefrompng($signaturePath);
-                if ($signature) {
-                    $sigWidth = imagesx($signature);
-                    $sigHeight = imagesy($signature);
-                    
-                    // تنظیم اندازه امضا
-                    $maxWidth = $field['width'] ?: 100;
-                    $maxHeight = $field['height'] ?: 60;
-                    
-                    $ratio = min($maxWidth / $sigWidth, $maxHeight / $sigHeight);
-                    $newWidth = (int)($sigWidth * $ratio);
-                    $newHeight = (int)($sigHeight * $ratio);
-                    
-                    imagecopyresampled(
-                        $image, $signature,
-                        $x, $y,
-                        0, 0,
-                        $newWidth, $newHeight,
-                        $sigWidth, $sigHeight
-                    );
-                    
-                    imagedestroy($signature);
-                }
-            }
-        } elseif ($field['field_name'] === 'stamp_place') {
-            // محل مهر - خالی می‌ماند
-            continue;
-        } else {
-            // فیلدهای معمولی
-            imagettftext(
-                $image,
-                $fontSizePt,
-                0, // زاویه
-                $x,
-                $y + $fontSize, // تنظیم Y برای baseline
-                $black,
-                $fontPath,
-                persianText($text)
+        if ($fieldName === 'content') {
+            // برای محتوای نامه
+            writeWrappedTextImproved(
+                $image, 
+                $fontSize, 
+                $x, 
+                $y, 
+                $black, 
+                $fontPath, 
+                $text, 
+                $field['width'] ?? 400
             );
+        } else {
+            // برای سایر فیلدها - راست‌چین
+            $reshapedText = PersianShaper::reshape($text);
+            imagettftext($image, $fontSize, 0, $x, $y + $fontSize, $black, $fontPath, $reshapedText);
         }
     }
     
-    // ذخیره تصویر
+    // اضافه کردن امضا در صورت وجود
+    if (!empty($message['signature_image'])) {
+        $signaturePath = UPLOAD_PATH . 'signatures/' . $message['signature_image'];
+        addSignatureToImage($image, $signaturePath, $fields);
+    }
+}
+
+/**
+ * پیدا کردن فونت مناسب
+ */
+function findSuitableFont() {
+    $fontPaths = [
+        __DIR__ . '/../assets/fonts/BNazanin.ttf',
+        __DIR__ . '/../assets/fonts/B_Nazanin.ttf',
+        __DIR__ . '/../assets/fonts/Vazir.ttf',
+        __DIR__ . '/../assets/fonts/IRANSans.ttf',
+        __DIR__ . '/../assets/fonts/Sahel.ttf',
+    ];
+    
+    foreach ($fontPaths as $path) {
+        if (file_exists($path) && is_readable($path)) {
+            return $path;
+        }
+    }
+    
+    return null; // در صورت پیدا نشدن هیچ فونتی
+}
+
+/**
+ * نوشتن متن wrap شده - نسخه بهبود یافته
+ */
+function writeWrappedTextImproved($image, $fontSize, $x, $y, $color, $font, $text, $maxWidth) {
+    require_once __DIR__ . '/../includes/persian_shaper.php';
+    
+    $words = explode(' ', $text);
+    $lines = [];
+    $currentLine = '';
+
+    foreach ($words as $word) {
+        $testLine = $currentLine . ($currentLine ? ' ' : '') . $word;
+        $reshapedTestLine = PersianShaper::reshape($testLine);
+        $bbox = imagettfbbox($fontSize, 0, $font, $reshapedTestLine);
+        $lineWidth = abs($bbox[2] - $bbox[0]);
+
+        if ($lineWidth > $maxWidth && !empty($currentLine)) {
+            $lines[] = $currentLine;
+            $currentLine = $word;
+        } else {
+            $currentLine = $testLine;
+        }
+    }
+    $lines[] = $currentLine;
+
+    $lineHeight = $fontSize * 2.2; // افزایش فاصله برای خوانایی بهتر
+    $currentY = $y + $fontSize;
+
+    foreach ($lines as $line) {
+        if (trim($line)) {
+            $reshapedLine = PersianShaper::reshape($line);
+            imagettftext($image, $fontSize, 0, $x, $currentY, $color, $font, $reshapedLine);
+            $currentY += $lineHeight;
+        }
+    }
+}
+
+
+/**
+ * اضافه کردن امضا به تصویر
+ */
+function addSignatureToImage($image, $signaturePath, $fields) {
+    if (!file_exists($signaturePath)) {
+        return;
+    }
+    
+    // پیدا کردن موقعیت امضا
+    $signatureField = null;
+    foreach ($fields as $field) {
+        if ($field['field_name'] === 'signature') {
+            $signatureField = $field;
+            break;
+        }
+    }
+    
+    if (!$signatureField) {
+        return;
+    }
+    
+    // بارگذاری تصویر امضا
+    $signatureInfo = @getimagesize($signaturePath);
+    if (!$signatureInfo) {
+        return;
+    }
+    
+    $mime = $signatureInfo['mime'];
+    $signature = null;
+    
+    switch ($mime) {
+        case 'image/jpeg':
+        case 'image/jpg':
+            $signature = @imagecreatefromjpeg($signaturePath);
+            break;
+        case 'image/png':
+            $signature = @imagecreatefrompng($signaturePath);
+            break;
+    }
+    
+    if (!$signature) {
+        return;
+    }
+    
+    // محاسبه اندازه
+    $sigWidth = imagesx($signature);
+    $sigHeight = imagesy($signature);
+    
+    $maxWidth = $signatureField['width'] ?? 100;
+    $maxHeight = $signatureField['height'] ?? 60;
+    
+    $scale = min($maxWidth / $sigWidth, $maxHeight / $sigHeight, 1);
+    $newWidth = (int)($sigWidth * $scale);
+    $newHeight = (int)($sigHeight * $scale);
+    
+    // موقعیت امضا
+    $x = (int)$signatureField['x_position'];
+    $y = (int)$signatureField['y_position'];
+    
+    // کپی با تغییر اندازه
+    imagecopyresampled(
+        $image,
+        $signature,
+        $x,
+        $y,
+        0,
+        0,
+        $newWidth,
+        $newHeight,
+        $sigWidth,
+        $sigHeight
+    );
+    
+    imagedestroy($signature);
+}
+
+/**
+ * ذخیره تصویر نامه
+ */
+function saveLetterImage($image, $messageId) {
+    // مسیر ذخیره
     $outputDir = UPLOAD_PATH . 'letters/';
     if (!is_dir($outputDir)) {
         mkdir($outputDir, 0755, true);
     }
     
-    $filename = 'letter_' . $message['id'] . '_' . time() . '.jpg';
+    // نام فایل یکتا
+    $filename = 'letter_' . $messageId . '_' . time() . '_' . uniqid() . '.jpg';
     $outputPath = $outputDir . $filename;
     
-    // ذخیره با کیفیت 100%
-    imagejpeg($image, $outputPath, 100);
+    // ذخیره با کیفیت بالا
+    $result = imagejpeg($image, $outputPath, 95);
     imagedestroy($image);
     
+    if (!$result) {
+        throw new Exception('خطا در ذخیره تصویر نامه');
+    }
+    
     return UPLOAD_URL . 'letters/' . $filename;
-}
-
-/**
- * نوشتن متن wrap شده
- */
-function writeWrappedText($image, $fontSize, $x, $y, $color, $font, $text, $maxWidth, $maxHeight) {
-    // تبدیل متن به آرایه خطوط
-    $lines = explode("\n", $text);
-    $wrappedLines = [];
-    
-    foreach ($lines as $line) {
-        $words = explode(' ', $line);
-        $currentLine = '';
-        
-        foreach ($words as $word) {
-            $testLine = $currentLine . ' ' . $word;
-            $bbox = imagettfbbox($fontSize, 0, $font, persianText(trim($testLine)));
-            $lineWidth = abs($bbox[4] - $bbox[0]);
-            
-            if ($lineWidth > $maxWidth && !empty($currentLine)) {
-                $wrappedLines[] = trim($currentLine);
-                $currentLine = $word;
-            } else {
-                $currentLine = $testLine;
-            }
-        }
-        
-        if (!empty(trim($currentLine))) {
-            $wrappedLines[] = trim($currentLine);
-        }
-    }
-    
-    // محاسبه ارتفاع خط (افزایش فاصله بین خطوط)
-    $lineHeight = $fontSize * 2;
-    $totalLines = count($wrappedLines);
-    $maxLines = (int)($maxHeight / $lineHeight);
-    
-    // اگر متن بیش از حد بلند است، اندازه فونت را کم کن
-    if ($totalLines > $maxLines && $fontSize > 10) {
-        $newFontSize = $fontSize - 2;
-        writeWrappedText($image, $newFontSize, $x, $y, $color, $font, $text, $maxWidth, $maxHeight);
-        return;
-    }
-    
-    // نوشتن خطوط
-    $currentY = $y + $fontSize;
-    $linesToWrite = min($totalLines, $maxLines);
-    
-    for ($i = 0; $i < $linesToWrite; $i++) {
-        imagettftext(
-            $image,
-            $fontSize,
-            0,
-            $x,
-            $currentY,
-            $color,
-            $font,
-            persianText($wrappedLines[$i])
-        );
-        
-        $currentY += $lineHeight;
-    }
-}
-
-/**
- * تصحیح متن فارسی برای نمایش صحیح
- */
-function persianText($text) {
-    include_once(__DIR__ . '/../includes/persian_shaper.php');
-    return PersianShaper::reshape($text);
 }
 ?>
