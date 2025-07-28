@@ -192,7 +192,7 @@ function generateWhiteBackgroundLetter($message, $fields) {
 }
 
 /**
- * نوشتن متن‌ها روی تصویر
+ * نوشتن متن‌ها روی تصویر (نسخه اصلاح شده)
  */
 function writeTextsOnImage($image, $message, $fields) {
     // رنگ متن
@@ -204,6 +204,9 @@ function writeTextsOnImage($image, $message, $fields) {
     if (!$fontPath) {
         throw new Exception('فونت مناسب یافت نشد');
     }
+
+    // شامل کردن کلاس پردازش متن فارسی
+    require_once __DIR__ . '/../includes/persian_shaper.php';
     
     // آماده‌سازی داده‌ها
     $currentDate = class_exists('JalaliDate') ? JalaliDate::toJalali(time(), 'Y/m/d') : date('Y/m/d');
@@ -226,11 +229,7 @@ function writeTextsOnImage($image, $message, $fields) {
         
         $x = (int)$field['x_position'];
         $y = (int)$field['y_position'];
-        // افزایش اندازه فونت پیش‌فرض از ۱۲ به ۱۶
         $fontSize = (int)($field['font_size'] ?: 16);
-        
-        // تنظیم متن برای نمایش صحیح
-        $text = persianText($text);
         
         if ($fieldName === 'content') {
             // برای محتوای نامه
@@ -242,20 +241,12 @@ function writeTextsOnImage($image, $message, $fields) {
                 $black, 
                 $fontPath, 
                 $text, 
-                $field['width'] ?? 400,
-                $field['height'] ?? 300
+                $field['width'] ?? 400
             );
         } else {
             // برای سایر فیلدها - راست‌چین
-            writeRightAlignedText(
-                $image,
-                $fontSize,
-                $x,
-                $y,
-                $black,
-                $fontPath,
-                $text
-            );
+            $reshapedText = PersianShaper::reshape($text);
+            imagettftext($image, $fontSize, 0, $x, $y + $fontSize, $black, $fontPath, $reshapedText);
         }
     }
     
@@ -276,11 +267,6 @@ function findSuitableFont() {
         __DIR__ . '/../assets/fonts/Vazir.ttf',
         __DIR__ . '/../assets/fonts/IRANSans.ttf',
         __DIR__ . '/../assets/fonts/Sahel.ttf',
-        __DIR__ . '/../fonts/BNazanin.ttf',
-        __DIR__ . '/../fonts/Vazir.ttf',
-        'C:/Windows/Fonts/tahoma.ttf',
-        'C:/Windows/Fonts/arial.ttf',
-        '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'
     ];
     
     foreach ($fontPaths as $path) {
@@ -289,122 +275,46 @@ function findSuitableFont() {
         }
     }
     
-    // اگر هیچ فونتی پیدا نشد، سعی کن از فونت‌های سیستم استفاده کن
-    $systemFonts = glob('/usr/share/fonts/truetype/*/*.ttf');
-    if (!empty($systemFonts)) {
-        return $systemFonts[0];
-    }
-    
-    return null;
-}
-
-/**
- * تصحیح متن فارسی برای نمایش صحیح
- */
-function persianText($text) {
-    include_once(__DIR__ . '/../includes/persian_shaper.php');
-    return PersianShaper::reshape($text);
-}
-
-/**
- * نوشتن متن راست‌چین
- */
-function writeRightAlignedText($image, $fontSize, $x, $y, $color, $font, $text) {
-    // محاسبه عرض متن
-    $bbox = imagettfbbox($fontSize, 0, $font, $text);
-    $textWidth = abs($bbox[4] - $bbox[0]);
-    
-    // تنظیم موقعیت X برای راست‌چین
-    $adjustedX = $x - $textWidth;
-    
-    // نوشتن متن
-    imagettftext(
-        $image,
-        $fontSize,
-        0,
-        $adjustedX,
-        $y,
-        $color,
-        $font,
-        $text
-    );
+    return null; // در صورت پیدا نشدن هیچ فونتی
 }
 
 /**
  * نوشتن متن wrap شده - نسخه بهبود یافته
  */
-function writeWrappedTextImproved($image, $fontSize, $x, $y, $color, $font, $text, $maxWidth, $maxHeight) {
-    // جداسازی پاراگراف‌ها
-    $paragraphs = explode("\n", $text);
-    $allLines = [];
+function writeWrappedTextImproved($image, $fontSize, $x, $y, $color, $font, $text, $maxWidth) {
+    require_once __DIR__ . '/../includes/persian_shaper.php';
     
-    // پردازش هر پاراگراف
-    foreach ($paragraphs as $paragraph) {
-        if (empty(trim($paragraph))) {
-            $allLines[] = ''; // خط خالی بین پاراگراف‌ها
-            continue;
-        }
-        
-        // تقسیم به کلمات
-        $words = preg_split('/\s+/u', trim($paragraph));
-        $currentLine = '';
-        
-        foreach ($words as $word) {
-            if (empty($word)) continue;
-            
-            // تست اضافه کردن کلمه به خط فعلی
-            $testLine = empty($currentLine) ? $word : $currentLine . ' ' . $word;
-            
-            // محاسبه عرض
-            $bbox = imagettfbbox($fontSize, 0, $font, $testLine);
-            $lineWidth = abs($bbox[4] - $bbox[0]);
-            
-            if ($lineWidth > $maxWidth && !empty($currentLine)) {
-                // خط فعلی را اضافه کن و خط جدید شروع کن
-                $allLines[] = $currentLine;
-                $currentLine = $word;
-            } else {
-                $currentLine = $testLine;
-            }
-        }
-        
-        // اضافه کردن آخرین خط
-        if (!empty($currentLine)) {
-            $allLines[] = $currentLine;
+    $words = explode(' ', $text);
+    $lines = [];
+    $currentLine = '';
+
+    foreach ($words as $word) {
+        $testLine = $currentLine . ($currentLine ? ' ' : '') . $word;
+        $reshapedTestLine = PersianShaper::reshape($testLine);
+        $bbox = imagettfbbox($fontSize, 0, $font, $reshapedTestLine);
+        $lineWidth = abs($bbox[2] - $bbox[0]);
+
+        if ($lineWidth > $maxWidth && !empty($currentLine)) {
+            $lines[] = $currentLine;
+            $currentLine = $word;
+        } else {
+            $currentLine = $testLine;
         }
     }
-    
-    // محاسبه فاصله بین خطوط (افزایش فاصله)
-    $lineHeight = $fontSize * 2;
-    $currentY = $y;
-    
-    // نوشتن خطوط با رعایت محدودیت ارتفاع
-    foreach ($allLines as $line) {
-        if ($currentY - $y > $maxHeight - $lineHeight) {
-            break; // فضا تمام شده
+    $lines[] = $currentLine;
+
+    $lineHeight = $fontSize * 2.2; // افزایش فاصله برای خوانایی بهتر
+    $currentY = $y + $fontSize;
+
+    foreach ($lines as $line) {
+        if (trim($line)) {
+            $reshapedLine = PersianShaper::reshape($line);
+            imagettftext($image, $fontSize, 0, $x, $currentY, $color, $font, $reshapedLine);
+            $currentY += $lineHeight;
         }
-        
-        if (!empty(trim($line))) {
-            // راست‌چین کردن هر خط
-            $bbox = imagettfbbox($fontSize, 0, $font, $line);
-            $lineWidth = abs($bbox[4] - $bbox[0]);
-            $adjustedX = $x + $maxWidth - $lineWidth;
-            
-            imagettftext(
-                $image,
-                $fontSize,
-                0,
-                $adjustedX,
-                $currentY,
-                $color,
-                $font,
-                $line
-            );
-        }
-        
-        $currentY += $lineHeight;
     }
 }
+
 
 /**
  * اضافه کردن امضا به تصویر
